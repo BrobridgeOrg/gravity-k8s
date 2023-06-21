@@ -73,6 +73,7 @@ spec:
           args:
             - |
               rm -f $TESTDB_READY_FILE 
+              cp /assets/assets/mysql/create_target.sql /docker-entrypoint-initdb.d/setup.sql
               docker-entrypoint.sh mysqld &
               mysql_pid=$!
               /assets/assets/mysql/wait_initdb.sh
