@@ -1,0 +1,278 @@
+[
+    {
+        "id": "e468ad01.32b03",
+        "type": "tab",
+        "label": "流程1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "a83ef9a5.5813e8",
+        "type": "Gravity Server",
+        "server": "nats-jetstream",
+        "port": "32803"
+    },
+    {
+        "id": "f77c32e.91932d",
+        "type": "MySQLdatabase",
+        "name": "target-mysql",
+        "host": "target-mysql",
+        "port": "3306",
+        "db": "MirrorTestDB",
+        "tz": "",
+        "charset": "UTF8"
+    },
+    {
+        "id": "8fc51bd7.155768",
+        "type": "Gravity Subscriber",
+        "z": "e468ad01.32b03",
+        "name": "",
+        "server": "a83ef9a5.5813e8",
+        "domain": "default",
+        "product": "accounts",
+        "initialLoad": false,
+        "manuallyAck": false,
+        "x": 210,
+        "y": 140,
+        "wires": [
+            [
+                "8ce7fec5.1625d",
+                "9cc5a58b.6fa8c8"
+            ]
+        ]
+    },
+    {
+        "id": "8ce7fec5.1625d",
+        "type": "debug",
+        "z": "e468ad01.32b03",
+        "name": "subscribe log",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 440,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "44dac998.777988",
+        "type": "change",
+        "z": "e468ad01.32b03",
+        "name": "setSQL_insert",
+        "rules": [
+            {
+                "t": "move",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payloadBak",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{}",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "\"INSERT INTO Accounts (id,name,phone) VALUES (\"&payloadBak.record.id&\",'\"&payloadBak.record.name&\"','\"&payloadBak.record.phone&\"');\"\t",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 640,
+        "y": 140,
+        "wires": [
+            [
+                "ba6bc695.5e7758",
+                "46f6511.96a73b"
+            ]
+        ]
+    },
+    {
+        "id": "3eb5c00c.f41ba",
+        "type": "debug",
+        "z": "e468ad01.32b03",
+        "name": "mysql-result",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1090,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "ba6bc695.5e7758",
+        "type": "mysql",
+        "z": "e468ad01.32b03",
+        "mydb": "f77c32e.91932d",
+        "name": "",
+        "x": 870,
+        "y": 140,
+        "wires": [
+            [
+                "3eb5c00c.f41ba"
+            ]
+        ]
+    },
+    {
+        "id": "9cc5a58b.6fa8c8",
+        "type": "switch",
+        "z": "e468ad01.32b03",
+        "name": "EventCheck",
+        "property": "payload.eventName",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "accountCreated",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "accountDeleted",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 3,
+        "x": 410,
+        "y": 180,
+        "wires": [
+            [
+                "44dac998.777988",
+                "7d829ce4.78ccd4"
+            ],
+            [
+                "15c25d0.e17e6a3"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "15c25d0.e17e6a3",
+        "type": "change",
+        "z": "e468ad01.32b03",
+        "name": "setSQL_delete",
+        "rules": [
+            {
+                "t": "move",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payloadBak",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{}",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "\"delete from Accounts WHERE id = \"&payloadBak.record.id&\";\"\t",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 640,
+        "y": 200,
+        "wires": [
+            [
+                "d59c8ea1.d4184"
+            ]
+        ]
+    },
+    {
+        "id": "d59c8ea1.d4184",
+        "type": "mysql",
+        "z": "e468ad01.32b03",
+        "mydb": "f77c32e.91932d",
+        "name": "",
+        "x": 870,
+        "y": 200,
+        "wires": [
+            [
+                "3eb5c00c.f41ba"
+            ]
+        ]
+    },
+    {
+        "id": "7d829ce4.78ccd4",
+        "type": "file",
+        "z": "e468ad01.32b03",
+        "name": "create_event_log2file",
+        "filename": "/e2e_status/dispatcher_create_event.log",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "utf8",
+        "x": 660,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "46f6511.96a73b",
+        "type": "function",
+        "z": "e468ad01.32b03",
+        "name": "refind playload",
+        "func": "m = {'topic': msg.topic};\nreturn {payload: m};",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 880,
+        "y": 100,
+        "wires": [
+            [
+                "c986c3c1.f9c96"
+            ]
+        ]
+    },
+    {
+        "id": "c986c3c1.f9c96",
+        "type": "file",
+        "z": "e468ad01.32b03",
+        "name": "create_topic_log2file",
+        "filename": "/e2e_status/mysql_insert_topic.log",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "utf8",
+        "x": 1100,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    }
+]
