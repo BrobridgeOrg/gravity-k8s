@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: atomic
+spec:
+  ports:
+  - port: 1880
+    targetPort: 1880
+  selector:
+    app: atomic
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: assets-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: e2e-status-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: atomic
+spec:
+  serviceName: atomic
+  replicas: 1
+  selector:
+    matchLabels:
+      app: atomic
+  template:
+    metadata:
+      labels:
+        app: atomic
+    spec:
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1000
+      containers:
+      - name: atomic
+        image: "brobridgehub/atomic-labdemo:v0.0.5-20230413-01"
+        ports:
+        - containerPort: 1880
+        env:
+        - name: TARGET_TESTDB_READY_FILE
+          value: /e2e_status/.target_testdb_ready
+        volumeMounts:
+        - name: assets-volume
+          mountPath: /data/atomic
+        - name: e2e-status-volume
+          mountPath: /e2e_status
+        command: ["/bin/sh", "-c"]
+        args: 
+        - |
+          echo "Waiting for target E2Etest DB to be ready"
+          while [ ! -f $$TARGET_TESTDB_READY_FILE ]; do
+            echo "Waiting for target E2Etest DB to be ready"
+            sleep 1
+          done
+          npm start --cache /data/atomic/.npm -- --userDir /data/atomic /data/atomic/flows.json
+      volumes:
+      - name: assets-volume
+        persistentVolumeClaim:
+          claimName: assets-claim
+      - name: e2e-status-volume
+        persistentVolumeClaim:
+          claimName: e2e-status-claim

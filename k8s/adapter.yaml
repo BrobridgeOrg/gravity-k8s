@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: gravity-adapter-mssql
+spec:
+  serviceName: gravity-adapter-mssql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gravity-adapter-mssql
+  template:
+    metadata:
+      labels:
+        app: gravity-adapter-mssql
+    spec:
+      initContainers:
+        - name: clone-assets
+          image: alpine/git
+          command: ["git", "clone", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
+          volumeMounts:
+            - name: mssql-adapter-data-volume
+              mountPath: "/assets"
+      containers:
+        - name: gravity-adapter-mssql
+          image: hb.k8sbridge.com/gravity/gravity-adapter-mssql:v3.0.2
+          env:
+            - name: GRAVITY_DEBUG
+              value: "debug"
+            - name: SOURCE_TESTDB_READY_FILE
+              value: "/e2e_status/.source_mssql_testdb_ready"
+            - name: GRAVITY_ADAPTER_MSSQL_GRAVITY_HOST
+              value: "nats-jetstream.default.svc.cluster.local"
+            - name: GRAVITY_ADAPTER_MSSQL_GRAVITY_PORT
+              value: "32803"
+            - name: GRAVITY_ADAPTER_MSSQL_GRAVITY_DOMAIN
+              value: "default"
+            - name: GRAVITY_ADAPTER_MSSQL_SOURCE_SETTINGS
+              value: |
+                {
+                  "sources": {
+                    "mssql_example": {
+                      "disabled": false,
+                      "host": "source-mssql.default.svc.cluster.local",
+                      "port": 31433,
+                      "username": "SA",
+                      "password": "1qaz@WSX",
+                      "dbname": "TestDB",
+                      "param": "",
+                      "initialLoad": false,
+                      "interval": 2,
+                      "tables": {
+                        "dbo.Accounts": {
+                          "events": {
+                            "snapshot": "accountInitialized",
+                            "create": "accountCreated",
+                            "update": "accountUpdated",
+                            "delete": "accountDeleted"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+            - name: GRAVITY_ADAPTER_MSSQL_STORE_ENABLED
+              value: "true"
+            - name: GRAVITY_ADAPTER_MSSQL_STORE_PATH
+              value: "/statestore"
+          volumeMounts:
+            - name: assets-volume
+              mountPath: "/assets"
+            - name: e2e-status-volume
+              mountPath: "/e2e_status"
+            - name: statestore-volume
+              mountPath: "/statestore"
+            - name: mssql-adapter-data-volume
+              mountPath: "/mssql-data"
+      volumes:
+        - name: assets-volume
+          emptyDir: {}
+        - name: e2e-status-volume
+          emptyDir: {}
+        - name: statestore-volume
+          emptyDir: {}
+        - name: mssql-adapter-data-volume
+          persistentVolumeClaim:
+            claimName: mssql-adapter-data-claim
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mssql-adapter-data-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+

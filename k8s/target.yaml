@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: target-mysql
+spec:
+  selector:
+    app: target-mysql
+  ports:
+    - name: mysql
+      protocol: TCP
+      port: 33306
+      targetPort: 3306
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+      
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: target-mysql
+spec:
+  serviceName: target-mysql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: target-mysql
+  template:
+    metadata:
+      labels:
+        app: target-mysql
+    spec:
+      initContainers:
+        - name: download-assets
+          image: alpine/git
+          command: ["git", "clone", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
+          volumeMounts:
+            - name: assets-volume
+              mountPath: "/assets"
+      containers:
+        - name: target-mysql
+          image: mysql:8.0.33
+          env:
+            - name: MYSQL_USER
+              value: "mysql"
+            - name: MYSQL_PASSWORD
+              value: "1qaz@WSX"
+            - name: MYSQL_ROOT_PASSWORD
+              value: "1qaz@WSXROOT"
+            - name: MYSQL_DATABASE
+              value: "MirrorTestDB"
+            - name: TESTDB_READY_FILE
+              value: "/e2e_status/.target_testdb_ready"
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: assets-volume
+              mountPath: "/assets"
+            - name: e2e-status-volume
+              mountPath: "/e2e_status"
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              rm -f $TESTDB_READY_FILE 
+              docker-entrypoint.sh mysqld &
+              mysql_pid=$!
+              /assets/assets/mysql/wait_initdb.sh
+              if [ $? -eq 0 ]; then
+                touch "$TESTDB_READY_FILE"
+                echo "## All scripts have been executed. Waiting for MySQL(pid $mysql_pid) to terminate."
+                wait $mysql_pid
+              fi
+      volumes:
+        - name: assets-volume
+          persistentVolumeClaim:
+            claimName: mysql-data-claim
+        - name: e2e-status-volume
+          emptyDir: {}

@@ -1,0 +1,53 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nats-jetstream
+spec:
+  serviceName: nats-jetstream
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats-jetstream
+  template:
+    metadata:
+      labels:
+        app: nats-jetstream
+    spec:
+      containers:
+      - name: nats-jetstream
+        image: "nats:2.9.15"
+        command: ["/nats-server", "--port", "32803", "--js", "--http_port", "8222", "--store_dir", "/data"]
+        ports:
+        - containerPort: 32803
+          name: nats
+        - containerPort: 8222
+          name: nats-http
+        volumeMounts:
+        - name: jetstream-data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: jetstream-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats-jetstream
+spec:
+  selector:
+    app: nats-jetstream
+  ports:
+    - protocol: TCP
+      port: 32803
+      targetPort: 32803
+      name: nats-port
+    - protocol: TCP
+      port: 8222
+      targetPort: 8222
+      name: nats-http-port

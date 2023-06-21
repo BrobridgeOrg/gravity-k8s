@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mssql-data-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: source-mssql
+spec:
+  selector:
+    app: source-mssql
+  ports:
+    - name: mssql
+      protocol: TCP
+      port: 31433
+      targetPort: 1433
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: source-mssql
+spec:
+  serviceName: source-mssql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: source-mssql
+  template:
+    metadata:
+      labels:
+        app: source-mssql
+    spec:
+      initContainers:
+        - name: clone-assets
+          image: alpine/git:2.40.1
+          command: ["git", "clone", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
+          volumeMounts:
+            - name: mssql-data
+              mountPath: "/assets"
+      containers:
+        - name: source-mssql
+          image: mcr.microsoft.com/mssql/server:2019-latest
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: SA_PASSWORD
+              value: "1qaz@WSX"
+            - name: MSSQL_AGENT_ENABLED
+              value: "true"
+            - name: TESTDB_INIT_SQL
+              value: "/assets/assets/mssql/create_source.sql"
+            - name: MSSQL_READY_FILE
+              value: "/assets/assets/e2e_status/.source_mssql_ready"
+            - name: TESTDB_READY_FILE
+              value: "/assets/assets/e2e_status/.source_mssql_testdb_ready"
+          ports:
+            - containerPort: 1433
+          volumeMounts:
+            - name: mssql-data
+              mountPath: "/assets"
+          command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              rm -rf /var/opt/mssql/*
+              rm -f $MSSQL_READY_FILE $TESTDB_READY_FILE 
+              /opt/mssql/bin/sqlservr &
+              pid=$!
+
+              echo "Waiting for MSSQL to be available ⏳"
+              /opt/mssql-tools/bin/sqlcmd -l 30 -S localhost -h-1 -V1 -U sa -P $SA_PASSWORD -Q "SELECT @@VERSION;" &> /dev/null
+              is_up=$?
+              while [ $is_up -ne 0 ] ; do
+                echo -e $(date)
+                /opt/mssql-tools/bin/sqlcmd -l 30 -S localhost -h-1 -V1 -U sa -P $SA_PASSWORD -Q "SELECT @@VERSION;" &> /dev/null
+                is_up=$?
+                sleep 5
+              done
+              echo "## MSSQL is up! 🎉"
+              touch "$MSSQL_READY_FILE"
+              /opt/mssql-tools/bin/sqlcmd -U sa -P $SA_PASSWORD -l 30 -e -i $TESTDB_INIT_SQL
+              if [ $? -ne 0 ]; then
+                echo "@@ Failed to execute init script !!!"
+              else
+                echo "## All scripts have been executed. Waiting for MSSQL(pid $pid) to terminate."
+                touch "$TESTDB_READY_FILE"
+              fi
+              wait $pid
+      volumes:
+        - name: mssql-data
+          persistentVolumeClaim:
+            claimName: mssql-data-claim

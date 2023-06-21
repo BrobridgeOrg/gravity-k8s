@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dispatcher-assets-pvc
+  namespace: default
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: gravity-dispatcher
+spec:
+  serviceName: gravity-dispatcher
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gravity-dispatcher
+  template:
+    metadata:
+      labels:
+        app: gravity-dispatcher
+    spec:
+      volumes:
+        - name: dispatcher-assets-volume
+          persistentVolumeClaim:
+            claimName: dispatcher-assets-pvc
+      initContainers:
+        - name: clone-assets
+          image: alpine/git
+          command: ["git", "clone", "--depth=1", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
+          volumeMounts:
+            - name: dispatcher-assets-volume
+              mountPath: "/assets"
+      containers:
+        - name: gravity-dispatcher
+          image: brobridgehub/gravity-dispatcher:v0.0.2
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until wget -qO- http://service/nats-jetstream:8222/healthz | grep -qi "ok"; do
+                echo "Waiting for nats-jetstream:8222 to be ready"
+                sleep 1;
+              done
+              echo "Start gravity-dispatcher"
+              /gravity-dispatcher &
+              pid=$$!
+              sleep 2
+              /assets/assets/dispatcher/create_product.sh
+              if [ $$? -ne 0 ]; then
+                echo "@@ Failed to create product !!!"
+              else
+                echo "## Product has been created. Waiting for gravity-dispatcher(pid $$pid) to terminate."
+              fi
+              wait $$pid
+          volumeMounts:
+            - name: dispatcher-assets-volume
+              mountPath: /assets
+          env:
+            - name: GRAVITY_DISPATCHER_GRAVITY_HOST
+              value: service/nats-jetstream
+            - name: GRAVITY_DISPATCHER_GRAVITY_PORT
+              value: "32803"
