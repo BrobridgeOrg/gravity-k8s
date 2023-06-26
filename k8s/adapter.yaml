@@ -41,7 +41,7 @@ spec:
                     "mssql_example": {
                       "disabled": false,
                       "host": "source-mssql.default.svc.cluster.local",
-                      "port": 31433,
+                      "port": 1433,
                       "username": "SA",
                       "password": "1qaz@WSX",
                       "dbname": "TestDB",
