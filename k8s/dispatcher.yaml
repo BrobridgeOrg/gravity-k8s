@@ -1,3 +1,4 @@
+
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -43,7 +44,7 @@ spec:
             - /bin/sh
             - -c
             - |
-              until wget -qO- http://service/nats-jetstream:8222/healthz | grep -qi "ok"; do
+              until wget -qO- nats-jetstream.default.svc.cluster.local:8222/healthz | grep -qi "ok"; do
                 echo "Waiting for nats-jetstream:8222 to be ready"
                 sleep 1;
               done
@@ -63,6 +64,6 @@ spec:
               mountPath: /assets
           env:
             - name: GRAVITY_DISPATCHER_GRAVITY_HOST
-              value: service/nats-jetstream
+              value: nats-jetstream.default.svc.cluster.local
             - name: GRAVITY_DISPATCHER_GRAVITY_PORT
               value: "32803"
