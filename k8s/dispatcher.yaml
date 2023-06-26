@@ -33,7 +33,7 @@ spec:
       initContainers:
         - name: clone-assets
           image: alpine/git
-          command: ["git", "clone", "--depth=1", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
+          command: ["git", "clone", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
           volumeMounts:
             - name: dispatcher-assets-volume
               mountPath: "/assets"
