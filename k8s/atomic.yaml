@@ -37,6 +37,19 @@ spec:
 
 ---
 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: clone-assets-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -53,8 +66,15 @@ spec:
         app: atomic
     spec:
       securityContext:
-        runAsUser: 1001
-        runAsGroup: 1000
+        runAsUser: 0
+        runAsGroup: 0
+      initContainers:
+      - name: clone-assets
+        image: alpine/git
+        command: ["git", "clone", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
+        volumeMounts:
+          - name: clone-assets-volume
+            mountPath: "/assets"
       containers:
       - name: atomic
         image: "brobridgehub/atomic-labdemo:v0.0.5-20230413-01"
@@ -71,12 +91,12 @@ spec:
         command: ["/bin/sh", "-c"]
         args: 
         - |
-          echo "Waiting for target E2Etest DB to be ready"
-          while [ ! -f $$TARGET_TESTDB_READY_FILE ]; do
-            echo "Waiting for target E2Etest DB to be ready"
-            sleep 1
-          done
-          npm start --cache /data/atomic/.npm -- --userDir /data/atomic /data/atomic/flows.json
+          # echo "Waiting for target E2Etest DB to be ready"
+          # while [ ! -f $$TARGET_TESTDB_READY_FILE ]; do
+          #   echo "Waiting for target E2Etest DB to be ready"
+          #   sleep 1
+          # done
+          npm start --cache /data/atomic/.npm -- --userDir /assets/assets/atomic-flow /assets/assets/atomic-flow/flows.json
       volumes:
       - name: assets-volume
         persistentVolumeClaim:
@@ -84,3 +104,6 @@ spec:
       - name: e2e-status-volume
         persistentVolumeClaim:
           claimName: e2e-status-claim
+      - name: clone-assets-volume
+        persistentVolumeClaim:
+          claimName: clone-assets-claim

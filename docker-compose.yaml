@@ -1,0 +1,219 @@
+version: '3'
+
+services:
+  nats-jetstream:
+    image: "nats:2.9.15"
+    container_name: "nats-jetstream"
+    ports:
+      - "32803:32803"
+    entrypoint: /nats-server
+    command: ["--port", "32803", "--js", "--http_port", "8222", "--store_dir", "/data"]
+    networks:
+      - nats
+
+  source-mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: "source-mssql"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=1qaz@WSX
+      - MSSQL_AGENT_ENABLED=true
+      - TESTDB_INIT_SQL=/assets/mssql/create_source.sql
+      - MSSQL_READY_FILE=/e2e_status/.source_mssql_ready
+      - TESTDB_READY_FILE=/e2e_status/.source_mssql_testdb_ready
+    ports:
+      - 31433:1433
+    volumes:
+      - ./assets:/assets
+      - ./e2e_status:/e2e_status
+    command:
+      - /bin/bash
+      - -c
+      - |
+        rm -rf /var/opt/mssql/*
+        rm -f $$MSSQL_READY_FILE $$TESTDB_READY_FILE 
+        /opt/mssql/bin/sqlservr &
+        pid=$$!
+
+        echo "Waiting for MSSQL to be available ⏳"
+        /opt/mssql-tools/bin/sqlcmd -l 30 -S localhost -h-1 -V1 -U sa -P $$SA_PASSWORD -Q "SELECT @@VERSION;" &> /dev/null
+        is_up=$$?
+        while [ $$is_up -ne 0 ] ; do
+          echo -e $$(date)
+          /opt/mssql-tools/bin/sqlcmd -l 30 -S localhost -h-1 -V1 -U sa -P $$SA_PASSWORD -Q "SELECT @@VERSION;" &> /dev/null
+          is_up=$$?
+          sleep 5
+        done
+        echo "## MSSQL is up! 🎉"
+        touch "$$MSSQL_READY_FILE"
+        /opt/mssql-tools/bin/sqlcmd -U sa -P $$SA_PASSWORD -l 30 -e -i $$TESTDB_INIT_SQL
+        if [ $$? -ne 0 ]; then
+          echo "@@ Failed to execute init script !!!"
+        else
+          echo "## All scripts have been executed. Waiting for MSSQL(pid $$pid) to terminate."
+          touch "$$TESTDB_READY_FILE"
+        fi
+        wait $$pid
+    networks:
+      - nats
+
+  target-mysql:
+    image: mysql:8.0.33
+    container_name: "target-mysql"
+    environment:
+      - MYSQL_USER=mysql
+      - MYSQL_PASSWORD=1qaz@WSX
+      - MYSQL_ROOT_PASSWORD=1qaz@WSXROOT
+      - MYSQL_DATABASE=MirrorTestDB
+      - TESTDB_READY_FILE=/e2e_status/.target_testdb_ready
+    ports:
+      - 33306:3306
+    volumes:
+      - ./assets/mysql/create_target.sql:/docker-entrypoint-initdb.d/setup.sql
+      - ./assets:/assets
+      - ./e2e_status:/e2e_status
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        rm -f $$TESTDB_READY_FILE 
+        docker-entrypoint.sh mysqld &
+        mysql_pid=$$!
+        /assets/mysql/wait_initdb.sh
+        if [ $$? -eq 0 ]; then
+          touch "$$TESTDB_READY_FILE"
+          echo "## All scripts have been executed. Waiting for MySQL(pid $$mysql_pid) to terminate."
+          wait $$mysql_pid
+        fi
+    networks:
+      - nats
+
+  gravity-adapter-mssql:
+    image: hb.k8sbridge.com/gravity/gravity-adapter-mssql:v3.0.2
+    # restart: always
+    container_name: "gravity-adapter-mssql"
+    depends_on:
+      - "nats-jetstream"
+      - "source-mssql"
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        echo "Waiting for net-jetstream to be ready"
+        until wget -qO- http://$${GRAVITY_ADAPTER_MSSQL_GRAVITY_HOST}:8222/healthz | grep -qi "ok"; do
+          echo "Waiting for $${GRAVITY_ADAPTER_MSSQL_GRAVITY_HOST}:8222 to be ready"
+          sleep 1;
+        done
+        echo "Waiting for source MSSQL TestDB to be ready"
+        while [ ! -f $$SOURCE_TESTDB_READY_FILE ]; do sleep 1; done
+        echo "Start gravity-adapter-mssql"
+        ## for run sh /startup.sh manually
+        # trap : TERM INT; sleep infinity & wait
+        sh /startup.sh
+    volumes:
+      - ./assets:/assets
+      - ./e2e_status:/e2e_status
+      # - /statestore
+    networks:
+      - nats
+    environment:
+      - SOURCE_TESTDB_READY_FILE=/e2e_status/.source_mssql_testdb_ready
+      - GRAVITY_ADAPTER_MSSQL_GRAVITY_HOST=nats-jetstream
+      - GRAVITY_ADAPTER_MSSQL_GRAVITY_PORT=32803
+      - GRAVITY_ADAPTER_MSSQL_GRAVITY_DOMAIN=default
+      - |
+        GRAVITY_ADAPTER_MSSQL_SOURCE_SETTINGS=
+        {
+          "sources": {
+            "mssql_example": {
+              "disabled": false,
+              "host": "source-mssql",
+              "port": 1433,
+              "username": "SA",
+              "password": "1qaz@WSX",
+              "dbname": "TestDB",
+              "param": "",
+              "initialLoad": false,
+              "interval": 2,
+              "tables": {
+                "dbo.Accounts": {
+                  "events": {
+                    "snapshot": "accountInitialized",
+                    "create": "accountCreated",
+                    "update": "accountUpdated",
+                    "delete": "accountDeleted"
+                  }
+                }
+              }
+            }
+          }
+        }
+      - GRAVITY_ADAPTER_MSSQL_STORE_ENABLED=true
+      - GRAVITY_ADAPTER_MSSQL_STORE_PATH=/statestore
+
+  gravity-dispatcher:
+    image: "brobridgehub/gravity-dispatcher:v0.0.2"
+    # restart: always
+    container_name: "gravity-dispatcher"
+    environment:
+      - GRAVITY_DISPATCHER_GRAVITY_HOST=nats-jetstream
+      - GRAVITY_DISPATCHER_GRAVITY_PORT=32803
+    depends_on:
+      - "nats-jetstream"
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        until wget -qO- http://$${GRAVITY_DISPATCHER_GRAVITY_HOST}:8222/healthz | grep -qi "ok"; do
+          echo "Waiting for $${GRAVITY_DISPATCHER_GRAVITY_HOST}:8222 to be ready"
+          sleep 1;
+        done
+        echo "Start gravity-dispatcher"
+        /gravity-dispatcher &
+        pid=$$!
+        sleep 2 # workaround for wait for gravity-dispatcher to be ready
+        /assets/dispatcher/create_product.sh
+        if [ $$? -ne 0 ]; then
+          echo "@@ Failed to create product !!!"
+        else
+          echo "## Product has been created. Waiting for gravity-dispatcher(pid $$pid) to terminate."
+        fi
+        wait $$pid
+    volumes:
+      - "./assets:/assets"
+    networks:
+      - nats
+
+  atomic:
+    image: "brobridgehub/atomic-labdemo:v0.0.5-20230413-01"
+    # restart: always
+    container_name: "atomic"
+    depends_on:
+      - "nats-jetstream"
+      - "target-mysql"
+      - "gravity-dispatcher"
+    user: "1001:1000"
+    ports:
+      - 1880:1880
+    environment:
+      - TARGET_TESTDB_READY_FILE=/e2e_status/.target_testdb_ready
+    volumes:
+      # - "./assets:/assets"
+      - "../assets/atomic:/data/atomic"
+      - "./e2e_status:/e2e_status"
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        echo "Waiting for target E2Etest DB to be ready"
+        while [ ! -f $$TARGET_TESTDB_READY_FILE ]; do
+          echo "Waiting for target E2Etest DB to be ready"
+          sleep 1
+        done
+        # ref: https://git.brobridge.com/Atomic/atomic/blob/master/build/docker/Dockerfile
+        # ENTRYPOINT [ "npm", "start", "--cache", "/data/atomic/.npm", "--", "--userDir", "/data/atomic", "/data/atomic/flows.json" ]
+        npm start --cache /data/atomic/.npm -- --userDir /data/atomic /data/atomic/flows.json
+    networks:
+      - nats
+networks:
+  nats: {}
