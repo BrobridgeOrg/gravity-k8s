@@ -13,19 +13,6 @@ spec:
 
 ---
 
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mysql-data-claim
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-      
----
-
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -42,11 +29,22 @@ spec:
         app: target-mysql
     spec:
       initContainers:
-        - name: download-assets
+        - name: clear-assets
+          image: alpine:latest
+          command: 
+            - sh
+            - -c
+            - |
+              rm -rf /assets/*
+              rm -rf /assets/.* || true
+          volumeMounts:
+            - name: mysql-data-claim
+              mountPath: "/assets"
+        - name: clone-assets
           image: alpine/git
           command: ["git", "clone", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
           volumeMounts:
-            - name: assets-volume
+            - name: mysql-data-claim
               mountPath: "/assets"
       containers:
         - name: target-mysql
@@ -61,14 +59,12 @@ spec:
             - name: MYSQL_DATABASE
               value: "MirrorTestDB"
             - name: TESTDB_READY_FILE
-              value: "/e2e_status/.target_testdb_ready"
+              value: "/assets/e2e_status/.target_testdb_ready"
           ports:
             - containerPort: 3306
           volumeMounts:
-            - name: assets-volume
+            - name: mysql-data-claim
               mountPath: "/assets"
-            - name: e2e-status-volume
-              mountPath: "/e2e_status"
           command: ["/bin/bash", "-c"]
           args:
             - |
@@ -82,9 +78,12 @@ spec:
                 echo "## All scripts have been executed. Waiting for MySQL(pid $mysql_pid) to terminate."
                 wait $mysql_pid
               fi
-      volumes:
-        - name: assets-volume
-          persistentVolumeClaim:
-            claimName: mysql-data-claim
-        - name: e2e-status-volume
-          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data-claim
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
