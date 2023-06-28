@@ -8,6 +8,7 @@ spec:
     targetPort: 1880
   selector:
     app: atomic
+  type: NodePort
 
 ---
 

@@ -59,7 +59,7 @@ spec:
             - name: MYSQL_DATABASE
               value: "MirrorTestDB"
             - name: TESTDB_READY_FILE
-              value: "/assets/e2e_status/.target_testdb_ready"
+              value: "/assets/assets/e2e_status/.target_testdb_ready"
           ports:
             - containerPort: 3306
           volumeMounts:
