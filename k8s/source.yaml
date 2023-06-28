@@ -92,6 +92,7 @@ spec:
               done
               echo "## MSSQL is up! 🎉"
               touch "$$MSSQL_READY_FILE"
+              sleep 60
               /opt/mssql-tools/bin/sqlcmd -U sa -P $$SA_PASSWORD -l 30 -e -i $$TESTDB_INIT_SQL
               if [ $$? -ne 0 ]; then
                 echo "@@ Failed to execute init script !!!"
