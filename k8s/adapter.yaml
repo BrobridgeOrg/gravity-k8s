@@ -23,17 +23,17 @@ spec:
               rm -rf /assets/*
               rm -rf /assets/.* || true
           volumeMounts:
-            - name: mssql-adapter-data-volume
+            - name: mssql-adapter-data-claim
               mountPath: "/assets"
         - name: clone-assets
           image: alpine/git
           command: ["git", "clone", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
           volumeMounts:
-            - name: mssql-adapter-data-volume
+            - name: mssql-adapter-data-claim
               mountPath: "/assets"
       containers:
         - name: gravity-adapter-mssql
-          image: hb.k8sbridge.com/gravity/gravity-adapter-mssql:v3.0.2
+          image: brobridgehub/gravity-adapter-mssql:v3.0.2
           env:
             - name: GRAVITY_DEBUG
               value: "debug"
@@ -83,7 +83,7 @@ spec:
               mountPath: "/e2e_status"
             - name: statestore-volume
               mountPath: "/statestore"
-            - name: mssql-adapter-data-volume
+            - name: mssql-adapter-data-claim
               mountPath: "/mssql-data"
       volumes:
         - name: assets-volume
@@ -92,18 +92,11 @@ spec:
           emptyDir: {}
         - name: statestore-volume
           emptyDir: {}
-        - name: mssql-adapter-data-volume
-          persistentVolumeClaim:
-            claimName: mssql-adapter-data-claim
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mssql-adapter-data-claim
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
+  volumeClaimTemplates:
+  - metadata:
+      name: mssql-adapter-data-claim
+    spec:
+      accessModes: [ "ReadWriteOnce" ]  # access mode
+      resources:
+        requests:
+          storage: 1Gi  # storage request

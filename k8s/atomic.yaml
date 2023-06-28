@@ -11,45 +11,6 @@ spec:
 
 ---
 
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: assets-claim
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: e2e-status-claim
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: clone-assets-claim
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
-
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -69,11 +30,22 @@ spec:
         runAsUser: 0
         runAsGroup: 0
       initContainers:
+      - name: clear-assets
+        image: alpine:latest
+        command: 
+          - sh
+          - -c
+          - |
+            rm -rf /assets/*
+            rm -rf /assets/.* || true
+        volumeMounts:
+          - name: atomic-assets
+            mountPath: "/assets"
       - name: clone-assets
         image: alpine/git
         command: ["git", "clone", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
         volumeMounts:
-          - name: clone-assets-volume
+          - name: atomic-assets
             mountPath: "/assets"
       containers:
       - name: atomic
@@ -84,7 +56,7 @@ spec:
         - name: TARGET_TESTDB_READY_FILE
           value: /e2e_status/.target_testdb_ready
         volumeMounts:
-        - name: assets-volume
+        - name: atomic-volume
           mountPath: /data/atomic
         - name: e2e-status-volume
           mountPath: /e2e_status
@@ -97,13 +69,25 @@ spec:
           #   sleep 1
           # done
           npm start --cache /data/atomic/.npm -- --userDir /assets/assets/atomic-flow /assets/assets/atomic-flow/flows.json
-      volumes:
-      - name: assets-volume
-        persistentVolumeClaim:
-          claimName: assets-claim
-      - name: e2e-status-volume
-        persistentVolumeClaim:
-          claimName: e2e-status-claim
-      - name: clone-assets-volume
-        persistentVolumeClaim:
-          claimName: clone-assets-claim
+  volumeClaimTemplates:
+  - metadata:
+      name: atomic-volume
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+  - metadata:
+      name: e2e-status-volume
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+  - metadata:
+      name: atomic-assets
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
