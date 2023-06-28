@@ -46,6 +46,11 @@ spec:
           volumeMounts:
             - name: mssql-data-claim
               mountPath: "/assets"
+        - name: disable-aslr
+          image: busybox
+          command: ["sysctl", "-w", "kernel.randomize_va_space=0"]
+          securityContext:
+            privileged: true
       containers:
         - name: source-mssql
           image: mcr.microsoft.com/mssql/server:2019-latest
@@ -57,7 +62,7 @@ spec:
             - name: MSSQL_AGENT_ENABLED
               value: "true"
             - name: TESTDB_INIT_SQL
-              value: "/assets/assets/create_source.sql"
+              value: "/assets/assets/mssql/create_source.sql"
             - name: MSSQL_READY_FILE
               value: "/assets/assets/e2e_status/.source_mssql_ready"
             - name: TESTDB_READY_FILE
