@@ -61,9 +61,10 @@ spec:
         env:
         - name: TARGET_TESTDB_READY_FILE
           value: /e2e_status/.target_testdb_ready
-        volumeMounts:
-        - name: e2e-status-volume
-          mountPath: /e2e_status
+        - name: CREATE_LOG
+          value: "/e2e_status/dispatcher_create_event.log"
+        - name: INSERT_LOG
+          value: "/e2e_status/mysql_insert_topic.log"
         command: ["/bin/sh", "-c"]
         args: 
         - |
@@ -72,11 +73,13 @@ spec:
           #   echo "Waiting for target E2Etest DB to be ready"
           #   sleep 1
           # done
-          #cp /assets/assets/atomic-flow/flows.json /data/atomic/
+          touch "$CREATE_LOG" "$INSERT_LOG"
           npm start --cache /assets/assets/atomic/.npm -- --userDir /assets/assets/atomic /assets/assets/atomic-flow/flows.json
         volumeMounts:
           - name: atomic-assets
             mountPath: "/assets"
+          - name: e2e-status-volume
+            mountPath: "/e2e_status"
   volumeClaimTemplates:
   - metadata:
       name: e2e-status-volume

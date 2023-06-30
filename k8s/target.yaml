@@ -37,7 +37,7 @@ spec:
             - -c
             - |
               rm -rf /assets/*
-              rm -rf /assets/[!.]* || true
+              rm -rf /assets/.[!.]* || true
               cd /assets
               git config --global init.defaultBranch main
               git init

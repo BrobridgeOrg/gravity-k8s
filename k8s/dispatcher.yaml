@@ -30,7 +30,6 @@ spec:
               git config core.sparseCheckout true
               echo "assets/dispatcher" >> .git/info/sparse-checkout
               git pull --set-upstream origin main
-
           volumeMounts:
             - name: dispatcher-assets-pvc
               mountPath: "/assets"
