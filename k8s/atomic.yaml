@@ -6,6 +6,7 @@ spec:
   ports:
   - port: 1880
     targetPort: 1880
+    nodePort: 30407
   selector:
     app: atomic
   type: NodePort
@@ -31,34 +32,36 @@ spec:
         runAsUser: 0
         runAsGroup: 0
       initContainers:
-      - name: clear-assets
-        image: alpine:latest
-        command: 
+      - name: clone-assets
+        image: alpine/git
+        imagePullPolicy: IfNotPresent
+        command:
           - sh
           - -c
           - |
             rm -rf /assets/*
-            rm -rf /assets/.* || true
-        volumeMounts:
-          - name: atomic-assets
-            mountPath: "/assets"
-      - name: clone-assets
-        image: alpine/git
-        command: ["git", "clone", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
+            rm -rf /assets/.[!.]* || true
+            cd /assets
+            git config --global init.defaultBranch main
+            git init
+            git remote add origin https://github.com/BrobridgeOrg/gravity-k8s.git
+            git config core.sparseCheckout true
+            echo "assets/atomic" >> .git/info/sparse-checkout
+            echo "assets/atomic-flow" >> .git/info/sparse-checkout
+            git pull --set-upstream origin main
         volumeMounts:
           - name: atomic-assets
             mountPath: "/assets"
       containers:
       - name: atomic
         image: "brobridgehub/atomic-labdemo:v0.0.5-20230413-01"
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 1880
         env:
         - name: TARGET_TESTDB_READY_FILE
           value: /e2e_status/.target_testdb_ready
         volumeMounts:
-        - name: atomic-volume
-          mountPath: /data/atomic
         - name: e2e-status-volume
           mountPath: /e2e_status
         command: ["/bin/sh", "-c"]
@@ -69,15 +72,12 @@ spec:
           #   echo "Waiting for target E2Etest DB to be ready"
           #   sleep 1
           # done
-          npm start --cache /data/atomic/.npm -- --userDir /assets/assets/atomic-flow /assets/assets/atomic-flow/flows.json
+          #cp /assets/assets/atomic-flow/flows.json /data/atomic/
+          npm start --cache /assets/assets/atomic/.npm -- --userDir /assets/assets/atomic /assets/assets/atomic-flow/flows.json
+        volumeMounts:
+          - name: atomic-assets
+            mountPath: "/assets"
   volumeClaimTemplates:
-  - metadata:
-      name: atomic-volume
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 1Gi
   - metadata:
       name: e2e-status-volume
     spec:

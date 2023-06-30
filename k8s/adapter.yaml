@@ -13,27 +13,10 @@ spec:
       labels:
         app: gravity-adapter-mssql
     spec:
-      initContainers:
-        - name: clear-assets
-          image: alpine:latest
-          command: 
-            - sh
-            - -c
-            - |
-              rm -rf /assets/*
-              rm -rf /assets/.* || true
-          volumeMounts:
-            - name: mssql-adapter-data-claim
-              mountPath: "/assets"
-        - name: clone-assets
-          image: alpine/git
-          command: ["git", "clone", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
-          volumeMounts:
-            - name: mssql-adapter-data-claim
-              mountPath: "/assets"
       containers:
         - name: gravity-adapter-mssql
           image: brobridgehub/gravity-adapter-mssql:v3.0.2
+          imagePullPolicy: IfNotPresent
           env:
             - name: GRAVITY_DEBUG
               value: "debug"
@@ -77,8 +60,6 @@ spec:
             - name: GRAVITY_ADAPTER_MSSQL_STORE_PATH
               value: "/statestore"
           volumeMounts:
-            - name: assets-volume
-              mountPath: "/assets"
             - name: e2e-status-volume
               mountPath: "/e2e_status"
             - name: statestore-volume
@@ -86,8 +67,6 @@ spec:
             - name: mssql-adapter-data-claim
               mountPath: "/mssql-data"
       volumes:
-        - name: assets-volume
-          emptyDir: {}
         - name: e2e-status-volume
           emptyDir: {}
         - name: statestore-volume

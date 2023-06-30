@@ -29,31 +29,35 @@ spec:
         app: source-mssql
     spec:
       initContainers:
-        - name: clear-assets
-          image: alpine:latest
-          command: 
+        - name: clone-assets
+          image: alpine/git
+          imagePullPolicy: IfNotPresent
+          command:
             - sh
             - -c
             - |
               rm -rf /assets/*
-              rm -rf /assets/.* || true
-          volumeMounts:
-            - name: mssql-data-claim
-              mountPath: "/assets"
-        - name: clone-assets
-          image: alpine/git
-          command: ["git", "clone", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
+              rm -rf /assets/.[!.]* || true
+              cd /assets
+              git config --global init.defaultBranch main
+              git init
+              git remote add origin https://github.com/BrobridgeOrg/gravity-k8s.git
+              git config core.sparseCheckout true
+              echo "assets/mssql" >> .git/info/sparse-checkout
+              git pull --set-upstream origin main
           volumeMounts:
             - name: mssql-data-claim
               mountPath: "/assets"
         - name: disable-aslr
           image: busybox
+          imagePullPolicy: IfNotPresent
           command: ["sysctl", "-w", "kernel.randomize_va_space=0"]
           securityContext:
             privileged: true
       containers:
         - name: source-mssql
           image: mcr.microsoft.com/mssql/server:2019-latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: ACCEPT_EULA
               value: "Y"
@@ -64,14 +68,16 @@ spec:
             - name: TESTDB_INIT_SQL
               value: "/assets/assets/mssql/create_source.sql"
             - name: MSSQL_READY_FILE
-              value: "/assets/assets/e2e_status/.source_mssql_ready"
+              value: "/e2e_status/.source_mssql_ready"
             - name: TESTDB_READY_FILE
-              value: "/assets/assets/e2e_status/.source_mssql_testdb_ready"
+              value: "/e2e_status/.source_mssql_testdb_ready"
           ports:
             - containerPort: 1433
           volumeMounts:
             - name: mssql-data-claim
               mountPath: "/assets"
+            - name: e2e-status-volume
+              mountPath: "/e2e_status"
           command:
             - "/bin/bash"
             - "-c"
@@ -101,6 +107,10 @@ spec:
                 touch "$$TESTDB_READY_FILE"
               fi
               wait $$pid
+      volumes:
+        - name: e2e-status-volume
+          emptyDir: {}
+
   volumeClaimTemplates:
   - metadata:
       name: mssql-data-claim
