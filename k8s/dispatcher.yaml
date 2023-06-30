@@ -14,26 +14,29 @@ spec:
         app: gravity-dispatcher
     spec:
       initContainers:
-        - name: clear-assets
-          image: alpine:latest
-          command: 
+        - name: clone-assets
+          image: alpine/git
+          imagePullPolicy: IfNotPresent
+          command:
             - sh
             - -c
             - |
               rm -rf /assets/*
-              rm -rf /assets/.* || true
-          volumeMounts:
-            - name: dispatcher-assets-pvc
-              mountPath: "/assets"
-        - name: clone-assets
-          image: alpine/git
-          command: ["git", "clone", "https://github.com/BrobridgeOrg/gravity-k8s.git", "/assets"]
+              rm -rf /assets/.[!.]* || true
+              cd /assets
+              git config --global init.defaultBranch main
+              git init
+              git remote add origin https://github.com/BrobridgeOrg/gravity-k8s.git
+              git config core.sparseCheckout true
+              echo "assets/dispatcher" >> .git/info/sparse-checkout
+              git pull --set-upstream origin main
           volumeMounts:
             - name: dispatcher-assets-pvc
               mountPath: "/assets"
       containers:
         - name: gravity-dispatcher
           image: brobridgehub/gravity-dispatcher:v0.0.4
+          imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
             - -c

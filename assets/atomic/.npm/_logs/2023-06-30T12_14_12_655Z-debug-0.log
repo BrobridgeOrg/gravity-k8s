@@ -1,0 +1,239 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@8.19.2
+2 info using node@v16.18.0
+3 timing npm:load:whichnode Completed in 1ms
+4 timing config:load:defaults Completed in 1ms
+5 timing config:load:file:/usr/local/lib/node_modules/npm/npmrc Completed in 1ms
+6 timing config:load:builtin Completed in 3ms
+7 warn config production Use `--omit=dev` instead.
+8 timing config:load:cli Completed in 21ms
+9 timing config:load:env Completed in 2ms
+10 timing config:load:file:/assets/assets/atomic/.npmrc Completed in 4ms
+11 timing config:load:project Completed in 128ms
+12 timing config:load:file:/root/.npmrc Completed in 0ms
+13 timing config:load:user Completed in 1ms
+14 timing config:load:file:/usr/local/etc/npmrc Completed in 1ms
+15 timing config:load:global Completed in 1ms
+16 timing config:load:validate Completed in 3ms
+17 timing config:load:credentials Completed in 4ms
+18 timing config:load:setEnvs Completed in 3ms
+19 timing config:load Completed in 168ms
+20 timing npm:load:configload Completed in 168ms
+21 timing npm:load:mkdirpcache Completed in 128ms
+22 timing npm:load:mkdirplogs Completed in 10ms
+23 verbose title npm install atomic-gravity@2.0.7
+24 verbose argv "install" "--no-audit" "--no-update-notifier" "--no-fund" "--save" "--save-prefix" "~" "--production" "atomic-gravity@2.0.7"
+25 timing npm:load:setTitle Completed in 4ms
+26 timing config:load:flatten Completed in 8ms
+27 timing npm:load:display Completed in 14ms
+28 verbose logfile logs-max:10 dir:/assets/assets/atomic/.npm/_logs
+29 verbose logfile /assets/assets/atomic/.npm/_logs/2023-06-30T12_14_12_655Z-debug-0.log
+30 timing npm:load:logFile Completed in 138ms
+31 timing npm:load:timers Completed in 0ms
+32 timing npm:load:configScope Completed in 0ms
+33 timing npm:load Completed in 466ms
+34 timing arborist:ctor Completed in 1ms
+35 silly logfile done cleaning log files
+36 timing arborist:ctor Completed in 0ms
+37 timing idealTree:init Completed in 305ms
+38 timing idealTree:userRequests Completed in 8ms
+39 silly idealTree buildDeps
+40 silly fetch manifest atomic-gravity@2.0.7
+41 http fetch GET 200 https://registry.npmjs.org/atomic-gravity 1172ms (cache miss)
+42 silly placeDep ROOT atomic-gravity@2.0.7 OK for: node-red-project@0.0.1 want: 2.0.7
+43 silly fetch manifest gravity-sdk@^1.0.11
+44 silly fetch manifest uuid@^8.3.2
+45 http fetch GET 200 https://registry.npmjs.org/gravity-sdk 352ms (cache miss)
+46 http fetch GET 200 https://registry.npmjs.org/uuid 892ms (cache miss)
+47 timing idealTree:#root Completed in 2101ms
+48 silly placeDep ROOT gravity-sdk@1.0.11 OK for: atomic-gravity@2.0.7 want: ^1.0.11
+49 silly placeDep ROOT uuid@8.3.2 OK for: atomic-gravity@2.0.7 want: ^8.3.2
+50 silly fetch manifest fake-data-generator-taiwan@^1.0.4
+51 silly fetch manifest nats@^2.6.1
+52 silly fetch manifest protobufjs@^6.11.2
+53 http fetch GET 200 https://registry.npmjs.org/fake-data-generator-taiwan 1145ms (cache miss)
+54 http fetch GET 200 https://registry.npmjs.org/nats 1166ms (cache miss)
+55 http fetch GET 200 https://registry.npmjs.org/protobufjs 1174ms (cache miss)
+56 timing idealTree:node_modules/atomic-gravity Completed in 1191ms
+57 silly placeDep ROOT fake-data-generator-taiwan@1.0.4 OK for: gravity-sdk@1.0.11 want: ^1.0.4
+58 silly placeDep ROOT nats@2.15.1 OK for: gravity-sdk@1.0.11 want: ^2.6.1
+59 silly placeDep ROOT protobufjs@6.11.3 OK for: gravity-sdk@1.0.11 want: ^6.11.2
+60 silly fetch manifest nkeys.js@1.0.5
+61 silly fetch manifest @protobufjs/aspromise@^1.1.2
+62 silly fetch manifest @protobufjs/base64@^1.1.2
+63 silly fetch manifest @protobufjs/codegen@^2.0.4
+64 silly fetch manifest @protobufjs/eventemitter@^1.1.0
+65 silly fetch manifest @protobufjs/fetch@^1.1.0
+66 silly fetch manifest @protobufjs/float@^1.0.2
+67 silly fetch manifest @protobufjs/inquire@^1.1.0
+68 silly fetch manifest @protobufjs/path@^1.1.2
+69 silly fetch manifest @protobufjs/pool@^1.1.0
+70 silly fetch manifest @protobufjs/utf8@^1.1.0
+71 silly fetch manifest @types/long@^4.0.1
+72 silly fetch manifest @types/node@>=13.7.0
+73 silly fetch manifest long@^4.0.0
+74 http fetch GET 200 https://registry.npmjs.org/@protobufjs%2feventemitter 770ms (cache miss)
+75 http fetch GET 200 https://registry.npmjs.org/@protobufjs%2ffetch 773ms (cache miss)
+76 http fetch GET 200 https://registry.npmjs.org/@protobufjs%2ffloat 838ms (cache miss)
+77 http fetch GET 200 https://registry.npmjs.org/@protobufjs%2futf8 892ms (cache miss)
+78 http fetch GET 200 https://registry.npmjs.org/@protobufjs%2finquire 902ms (cache miss)
+79 http fetch GET 200 https://registry.npmjs.org/@protobufjs%2fpath 910ms (cache miss)
+80 http fetch GET 200 https://registry.npmjs.org/@protobufjs%2fbase64 920ms (cache miss)
+81 http fetch GET 200 https://registry.npmjs.org/@protobufjs%2fpool 913ms (cache miss)
+82 http fetch GET 200 https://registry.npmjs.org/@protobufjs%2fcodegen 927ms (cache miss)
+83 http fetch GET 200 https://registry.npmjs.org/@types%2flong 919ms (cache miss)
+84 http fetch GET 200 https://registry.npmjs.org/@protobufjs%2faspromise 940ms (cache miss)
+85 http fetch GET 200 https://registry.npmjs.org/long 1579ms (cache miss)
+86 http fetch GET 200 https://registry.npmjs.org/nkeys.js 1636ms (cache miss)
+87 http fetch GET 200 https://registry.npmjs.org/@types%2fnode 1708ms (cache miss)
+88 timing idealTree:node_modules/gravity-sdk Completed in 1754ms
+89 timing idealTree:node_modules/fake-data-generator-taiwan Completed in 0ms
+90 silly placeDep ROOT nkeys.js@1.0.5 OK for: nats@2.15.1 want: 1.0.5
+91 silly fetch manifest tweetnacl@1.0.3
+92 http fetch GET 200 https://registry.npmjs.org/tweetnacl 826ms (cache miss)
+93 timing idealTree:node_modules/nats Completed in 831ms
+94 silly placeDep ROOT tweetnacl@1.0.3 OK for: nkeys.js@1.0.5 want: 1.0.3
+95 timing idealTree:node_modules/nkeys.js Completed in 6ms
+96 silly placeDep ROOT @protobufjs/aspromise@1.1.2 OK for: protobufjs@6.11.3 want: ^1.1.2
+97 silly placeDep ROOT @protobufjs/base64@1.1.2 OK for: protobufjs@6.11.3 want: ^1.1.2
+98 silly placeDep ROOT @protobufjs/codegen@2.0.4 OK for: protobufjs@6.11.3 want: ^2.0.4
+99 silly placeDep ROOT @protobufjs/eventemitter@1.1.0 OK for: protobufjs@6.11.3 want: ^1.1.0
+100 silly placeDep ROOT @protobufjs/fetch@1.1.0 OK for: protobufjs@6.11.3 want: ^1.1.0
+101 silly placeDep ROOT @protobufjs/float@1.0.2 OK for: protobufjs@6.11.3 want: ^1.0.2
+102 silly placeDep ROOT @protobufjs/inquire@1.1.0 OK for: protobufjs@6.11.3 want: ^1.1.0
+103 silly placeDep ROOT @protobufjs/path@1.1.2 OK for: protobufjs@6.11.3 want: ^1.1.2
+104 silly placeDep ROOT @protobufjs/pool@1.1.0 OK for: protobufjs@6.11.3 want: ^1.1.0
+105 silly placeDep ROOT @protobufjs/utf8@1.1.0 OK for: protobufjs@6.11.3 want: ^1.1.0
+106 silly placeDep ROOT @types/long@4.0.2 OK for: protobufjs@6.11.3 want: ^4.0.1
+107 silly placeDep ROOT @types/node@20.3.2 OK for: protobufjs@6.11.3 want: >=13.7.0
+108 silly placeDep ROOT long@4.0.0 OK for: protobufjs@6.11.3 want: ^4.0.0
+109 timing idealTree:node_modules/protobufjs Completed in 30ms
+110 timing idealTree:node_modules/@protobufjs/aspromise Completed in 0ms
+111 timing idealTree:node_modules/@protobufjs/base64 Completed in 0ms
+112 timing idealTree:node_modules/@protobufjs/codegen Completed in 0ms
+113 timing idealTree:node_modules/@protobufjs/eventemitter Completed in 0ms
+114 timing idealTree:node_modules/@protobufjs/fetch Completed in 0ms
+115 timing idealTree:node_modules/@protobufjs/float Completed in 0ms
+116 timing idealTree:node_modules/@protobufjs/inquire Completed in 0ms
+117 timing idealTree:node_modules/@protobufjs/path Completed in 0ms
+118 timing idealTree:node_modules/@protobufjs/pool Completed in 0ms
+119 timing idealTree:node_modules/@protobufjs/utf8 Completed in 0ms
+120 timing idealTree:node_modules/@types/long Completed in 0ms
+121 timing idealTree:node_modules/@types/node Completed in 0ms
+122 timing idealTree:node_modules/long Completed in 0ms
+123 timing idealTree:node_modules/tweetnacl Completed in 0ms
+124 timing idealTree:node_modules/uuid Completed in 0ms
+125 timing idealTree:buildDeps Completed in 5918ms
+126 timing idealTree:fixDepFlags Completed in 1ms
+127 timing idealTree Completed in 6235ms
+128 timing reify:loadTrees Completed in 6237ms
+129 timing reify:diffTrees Completed in 2ms
+130 silly reify moves {}
+131 timing reify:retireShallow Completed in 1ms
+132 timing reify:createSparse Completed in 183ms
+133 timing reify:trashOmits Completed in 0ms
+134 timing reify:loadBundles Completed in 0ms
+135 silly tarball no local data for long@https://registry.npmjs.org/long/-/long-4.0.0.tgz. Extracting by manifest.
+136 silly tarball no local data for @protobufjs/utf8@https://registry.npmjs.org/@protobufjs/utf8/-/utf8-1.1.0.tgz. Extracting by manifest.
+137 silly tarball no local data for @protobufjs/pool@https://registry.npmjs.org/@protobufjs/pool/-/pool-1.1.0.tgz. Extracting by manifest.
+138 silly tarball no local data for @types/node@https://registry.npmjs.org/@types/node/-/node-20.3.2.tgz. Extracting by manifest.
+139 silly tarball no local data for @protobufjs/codegen@https://registry.npmjs.org/@protobufjs/codegen/-/codegen-2.0.4.tgz. Extracting by manifest.
+140 silly tarball no local data for @types/long@https://registry.npmjs.org/@types/long/-/long-4.0.2.tgz. Extracting by manifest.
+141 silly tarball no local data for @protobufjs/fetch@https://registry.npmjs.org/@protobufjs/fetch/-/fetch-1.1.0.tgz. Extracting by manifest.
+142 silly tarball no local data for tweetnacl@https://registry.npmjs.org/tweetnacl/-/tweetnacl-1.0.3.tgz. Extracting by manifest.
+143 silly tarball no local data for @protobufjs/inquire@https://registry.npmjs.org/@protobufjs/inquire/-/inquire-1.1.0.tgz. Extracting by manifest.
+144 silly tarball no local data for @protobufjs/aspromise@https://registry.npmjs.org/@protobufjs/aspromise/-/aspromise-1.1.2.tgz. Extracting by manifest.
+145 silly tarball no local data for nkeys.js@https://registry.npmjs.org/nkeys.js/-/nkeys.js-1.0.5.tgz. Extracting by manifest.
+146 silly tarball no local data for @protobufjs/eventemitter@https://registry.npmjs.org/@protobufjs/eventemitter/-/eventemitter-1.1.0.tgz. Extracting by manifest.
+147 silly tarball no local data for nats@https://registry.npmjs.org/nats/-/nats-2.15.1.tgz. Extracting by manifest.
+148 silly tarball no local data for @protobufjs/float@https://registry.npmjs.org/@protobufjs/float/-/float-1.0.2.tgz. Extracting by manifest.
+149 silly tarball no local data for @protobufjs/path@https://registry.npmjs.org/@protobufjs/path/-/path-1.1.2.tgz. Extracting by manifest.
+150 silly tarball no local data for atomic-gravity@https://registry.npmjs.org/atomic-gravity/-/atomic-gravity-2.0.7.tgz. Extracting by manifest.
+151 silly tarball no local data for fake-data-generator-taiwan@https://registry.npmjs.org/fake-data-generator-taiwan/-/fake-data-generator-taiwan-1.0.4.tgz. Extracting by manifest.
+152 silly tarball no local data for @protobufjs/base64@https://registry.npmjs.org/@protobufjs/base64/-/base64-1.1.2.tgz. Extracting by manifest.
+153 silly tarball no local data for protobufjs@https://registry.npmjs.org/protobufjs/-/protobufjs-6.11.3.tgz. Extracting by manifest.
+154 silly tarball no local data for gravity-sdk@https://registry.npmjs.org/gravity-sdk/-/gravity-sdk-1.0.11.tgz. Extracting by manifest.
+155 silly tarball no local data for uuid@https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz. Extracting by manifest.
+156 http fetch GET 200 https://registry.npmjs.org/@protobufjs/eventemitter/-/eventemitter-1.1.0.tgz 5361ms (cache miss)
+157 timing reifyNode:node_modules/@protobufjs/eventemitter Completed in 6308ms
+158 http fetch GET 200 https://registry.npmjs.org/@protobufjs/aspromise/-/aspromise-1.1.2.tgz 5377ms (cache miss)
+159 timing reifyNode:node_modules/@protobufjs/aspromise Completed in 6316ms
+160 http fetch GET 200 https://registry.npmjs.org/@protobufjs/codegen/-/codegen-2.0.4.tgz 5413ms (cache miss)
+161 timing reifyNode:node_modules/@protobufjs/codegen Completed in 6342ms
+162 http fetch GET 200 https://registry.npmjs.org/@protobufjs/path/-/path-1.1.2.tgz 5391ms (cache miss)
+163 timing reifyNode:node_modules/@protobufjs/path Completed in 6345ms
+164 http fetch GET 200 https://registry.npmjs.org/@protobufjs/utf8/-/utf8-1.1.0.tgz 5629ms (cache miss)
+165 timing reifyNode:node_modules/@protobufjs/utf8 Completed in 6435ms
+166 http fetch GET 200 https://registry.npmjs.org/@protobufjs/inquire/-/inquire-1.1.0.tgz 5539ms (cache miss)
+167 timing reifyNode:node_modules/@protobufjs/inquire Completed in 6478ms
+168 http fetch GET 200 https://registry.npmjs.org/long/-/long-4.0.0.tgz 5686ms (cache miss)
+169 http fetch GET 200 https://registry.npmjs.org/@types/long/-/long-4.0.2.tgz 5552ms (cache miss)
+170 timing reifyNode:node_modules/@types/long Completed in 6486ms
+171 http fetch GET 200 https://registry.npmjs.org/@protobufjs/fetch/-/fetch-1.1.0.tgz 5556ms (cache miss)
+172 timing reifyNode:node_modules/@protobufjs/fetch Completed in 6492ms
+173 http fetch GET 200 https://registry.npmjs.org/@protobufjs/pool/-/pool-1.1.0.tgz 5689ms (cache miss)
+174 timing reifyNode:node_modules/@protobufjs/pool Completed in 6496ms
+175 http fetch GET 200 https://registry.npmjs.org/@protobufjs/base64/-/base64-1.1.2.tgz 5544ms (cache miss)
+176 timing reifyNode:node_modules/@protobufjs/base64 Completed in 6512ms
+177 timing reifyNode:node_modules/long Completed in 6612ms
+178 http fetch GET 200 https://registry.npmjs.org/@protobufjs/float/-/float-1.0.2.tgz 5663ms (cache miss)
+179 timing reifyNode:node_modules/@protobufjs/float Completed in 6611ms
+180 http fetch GET 200 https://registry.npmjs.org/tweetnacl/-/tweetnacl-1.0.3.tgz 5695ms (cache miss)
+181 timing reifyNode:node_modules/tweetnacl Completed in 6749ms
+182 http fetch GET 200 https://registry.npmjs.org/atomic-gravity/-/atomic-gravity-2.0.7.tgz 6458ms (cache miss)
+183 timing reifyNode:node_modules/atomic-gravity Completed in 7415ms
+184 http fetch GET 200 https://registry.npmjs.org/nkeys.js/-/nkeys.js-1.0.5.tgz 6894ms (cache miss)
+185 timing reifyNode:node_modules/nkeys.js Completed in 7848ms
+186 http fetch GET 200 https://registry.npmjs.org/gravity-sdk/-/gravity-sdk-1.0.11.tgz 6937ms (cache miss)
+187 timing reifyNode:node_modules/gravity-sdk Completed in 7923ms
+188 http fetch GET 200 https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz 7796ms (cache miss)
+189 timing reifyNode:node_modules/uuid Completed in 8992ms
+190 http fetch GET 200 https://registry.npmjs.org/fake-data-generator-taiwan/-/fake-data-generator-taiwan-1.0.4.tgz 9663ms (cache miss)
+191 timing reifyNode:node_modules/fake-data-generator-taiwan Completed in 10665ms
+192 http fetch GET 200 https://registry.npmjs.org/protobufjs/-/protobufjs-6.11.3.tgz 12355ms (cache miss)
+193 timing reifyNode:node_modules/protobufjs Completed in 13386ms
+194 http fetch GET 200 https://registry.npmjs.org/nats/-/nats-2.15.1.tgz 13562ms (cache miss)
+195 timing reifyNode:node_modules/nats Completed in 14546ms
+196 http fetch GET 200 https://registry.npmjs.org/@types/node/-/node-20.3.2.tgz 13642ms (cache miss)
+197 timing reifyNode:node_modules/@types/node Completed in 14574ms
+198 timing reify:unpack Completed in 14576ms
+199 timing reify:unretire Completed in 0ms
+200 timing build:queue Completed in 60ms
+201 timing build:link:node_modules/protobufjs Completed in 109ms
+202 timing build:link:node_modules/uuid Completed in 110ms
+203 timing build:link Completed in 115ms
+204 info run protobufjs@6.11.3 postinstall node_modules/protobufjs node scripts/postinstall
+205 info run protobufjs@6.11.3 postinstall { code: 0, signal: null }
+206 timing build:run:postinstall:node_modules/protobufjs Completed in 219ms
+207 timing build:run:postinstall Completed in 221ms
+208 timing build:deps Completed in 398ms
+209 timing build Completed in 398ms
+210 timing reify:build Completed in 404ms
+211 timing reify:trash Completed in 0ms
+212 timing reify:save Completed in 187ms
+213 timing reify Completed in 21629ms
+214 silly ADD node_modules/long
+215 silly ADD node_modules/@types/node
+216 silly ADD node_modules/@types/long
+217 silly ADD node_modules/@protobufjs/utf8
+218 silly ADD node_modules/@protobufjs/pool
+219 silly ADD node_modules/@protobufjs/path
+220 silly ADD node_modules/@protobufjs/inquire
+221 silly ADD node_modules/@protobufjs/float
+222 silly ADD node_modules/@protobufjs/fetch
+223 silly ADD node_modules/@protobufjs/eventemitter
+224 silly ADD node_modules/@protobufjs/codegen
+225 silly ADD node_modules/@protobufjs/base64
+226 silly ADD node_modules/@protobufjs/aspromise
+227 silly ADD node_modules/tweetnacl
+228 silly ADD node_modules/nkeys.js
+229 silly ADD node_modules/protobufjs
+230 silly ADD node_modules/nats
+231 silly ADD node_modules/fake-data-generator-taiwan
+232 silly ADD node_modules/uuid
+233 silly ADD node_modules/gravity-sdk
+234 silly ADD node_modules/atomic-gravity
+235 timing command:install Completed in 21640ms
+236 verbose exit 0
+237 timing npm Completed in 22247ms
+238 info ok
